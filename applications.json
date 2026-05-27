@@ -1,0 +1,76 @@
+[
+  {
+    "id": "1779871938",
+    "timestamp": "2026-05-27T03:52:18.336786",
+    "date": "2026-05-27",
+    "title": "Customer Service Representative Cigna Healthcare",
+    "company": "Cigna Healthcare",
+    "url": "https://remoteOK.com/remote-jobs/remote-customer-service-representative-cigna-healthcare-cigna-healthcare-1132353",
+    "source": "RemoteOK",
+    "decision": "SKIP",
+    "match_score": 0,
+    "score_breakdown": {
+      "technical_skills": 0,
+      "seniority_experience": 0,
+      "industry_alignment": 0
+    },
+    "skip_reason": "No technical skills match and industry alignment is low",
+    "matched_keywords": [],
+    "missing_keywords": [
+      "Customer Service",
+      "Medical Terminology",
+      "Microsoft Outlook",
+      "Call Center"
+    ],
+    "tailored_bullets": [],
+    "cover_letter": "",
+    "resume_summary": "",
+    "screening_answers": {
+      "Tell me about yourself": "",
+      "Why do you want this role": "",
+      "What is your greatest strength": "",
+      "Are you authorized to work in the US": "Yes, authorized to work in the US",
+      "When can you start": "Immediately",
+      "Years of AI/ML experience": "2 years building production AI systems"
+    },
+    "sheet_log": "Skipped: 0% \u2014 No alignment with Customer Service Representative role",
+    "status": "skipped"
+  },
+  {
+    "id": "1779871936",
+    "timestamp": "2026-05-27T03:52:16.756319",
+    "date": "2026-05-27",
+    "title": "Director Planning and Performance Reporting",
+    "company": "Queensland Government",
+    "url": "https://remoteOK.com/remote-jobs/remote-director-planning-and-performance-reporting-queensland-government-1132332",
+    "source": "RemoteOK",
+    "decision": "SKIP",
+    "match_score": 20,
+    "score_breakdown": {
+      "technical_skills": 0,
+      "seniority_experience": 10,
+      "industry_alignment": 10
+    },
+    "skip_reason": "Lack of technical skills match and industry alignment",
+    "matched_keywords": [],
+    "missing_keywords": [
+      "strategic planning",
+      "performance reporting",
+      "leadership",
+      "management"
+    ],
+    "tailored_bullets": [],
+    "cover_letter": "",
+    "resume_summary": "",
+    "screening_answers": {
+      "Tell me about yourself": "",
+      "Why do you want this role": "",
+      "What is your greatest strength": "",
+      "Are you authorized to work in the US": "Yes, authorized to work in the US",
+      "When can you start": "Immediately",
+      "Years of AI/ML experience": "2 years building production AI systems"
+    },
+    "sheet_log": "Skipped: 20% \u2014 Low alignment with Director Planning and Performance Reporting role at Queensland Government",
+    "status": "skipped"
+  }
+]

@@ -1,0 +1,89 @@
+{
+  "personal": {
+    "name": "Tirumalarao Kilari",
+    "email": "kilaritirumalarao@gmail.com",
+    "phone": "346-474-6746",
+    "location": "Pflugerville, TX",
+    "linkedin": "https://linkedin.com/in/tirumalaraokilari-803829273",
+    "github": "https://github.com/bizygoodz-web",
+    "website": "",
+    "title": "AI Engineer · Prompt Engineer · RAG Systems Builder"
+  },
+  "summary": "AI Engineer with hands-on experience designing production-grade agentic systems, multi-stage LLM pipelines, and modular backend architectures. Shipped two live web applications. Experienced in Python, JavaScript, SQL across live non-mocked environments.",
+  "skills": {
+    "languages": ["Python", "JavaScript", "SQL", "Bash"],
+    "llm_ai": ["Anthropic Claude", "OpenAI GPT-4", "Google Gemini", "Groq LLaMA", "Prompt Engineering", "System Prompt Design", "RAG Architecture"],
+    "frameworks": ["LangChain", "LangGraph", "FastAPI", "Streamlit", "Uvicorn", "Pydantic", "pytest"],
+    "vector_retrieval": ["FAISS", "Sentence-Transformers", "Cosine Similarity", "Chunking Strategies", "Embedding Pipelines"],
+    "infrastructure": ["GitHub Actions CI/CD", "Render", "Railway", "REST APIs", "Git", "GitHub Copilot"],
+    "libraries": ["PyMuPDF", "pdfplumber", "BeautifulSoup", "httpx", "NumPy", "python-dotenv"],
+    "security": ["Prompt injection detection", "Authority escalation prevention", "Hallucination mitigation"]
+  },
+  "experience": [
+    {
+      "title": "AI Agent & Prompt Engineer (Contract)",
+      "company": "Blue Origin IT Staffing — Client: Austinite Market",
+      "dates": "2024 – Present",
+      "location": "Austin, TX",
+      "bullets": [
+        "Designed and deployed a multi-stage AI content pipeline: client brief ingestion → prompt engineering → image generation → iterative refinement → production delivery",
+        "Engineered detailed system prompts in Google Gemini to autonomously produce brand-consistent marketing assets",
+        "Delivered production-ready assets physically deployed at client storefront — validating real-world AI output quality",
+        "Translated complex business requirements into precise AI agent instructions for multi-step task execution"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "ResumeAI",
+      "url": "https://resumeai-v2.onrender.com",
+      "stack": ["Python", "Streamlit", "Groq", "BeautifulSoup", "Render"],
+      "bullets": [
+        "Built and deployed full-stack AI web application that reads job posting URLs and tailors resumes automatically",
+        "Multi-stage pipeline: URL scraping → skill gap analysis → resume rewriting → cover letter generation",
+        "Live deployed on Render with PDF/DOCX parsing and real-time Groq LLaMA API calls"
+      ]
+    },
+    {
+      "name": "AI Agent with Web Search",
+      "url": "https://my-ai-agent-app.onrender.com",
+      "stack": ["Python", "Streamlit", "Groq", "DuckDuckGo"],
+      "bullets": [
+        "Conversational AI agent with real-time web search using tool-use loop",
+        "LLM decides whether to search, executes search, feeds results back, generates grounded answer",
+        "Full multi-turn conversation memory with live search status indicators"
+      ]
+    },
+    {
+      "name": "RAG PDF Chat Agent",
+      "url": "https://github.com/bizygoodz-web/rag-pdf-chat",
+      "stack": ["Python", "FAISS", "Claude", "FastAPI", "pytest"],
+      "bullets": [
+        "Production-grade RAG agent: PDF ingestion, vector indexing, semantic retrieval, LLM response",
+        "Persistent FAISS session state, prompt injection defenses, authority escalation prevention",
+        "FastAPI REST server with /ingest /query /health endpoints; 10 unit tests; GitHub Actions CI/CD"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "degree": "Computer Science",
+      "school": "Lindsey Wilson College",
+      "dates": "2022–2023",
+      "location": "Columbia, KY"
+    }
+  ],
+  "certifications": [
+    "DeepLearning.AI — LangChain & Vector Databases in Production (2025, in progress)",
+    "GitHub Copilot — daily use",
+    "Claude API (claude-sonnet-4) — system prompts, token management, grounding strategies"
+  ],
+  "preferences": {
+    "available": "Immediately",
+    "work_auth": "Yes, authorized to work in the US",
+    "visa_sponsorship": "No",
+    "salary": "Open to discussion based on full compensation package",
+    "remote": true,
+    "years_experience": "2"
+  }
+}

@@ -1,8 +1,8 @@
-streamlit
 groq
 httpx
 beautifulsoup4
 lxml
+playwright
+schedule
 reportlab
-pdfplumber
-python-docx
+python-dotenv
