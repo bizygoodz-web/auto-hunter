@@ -1,0 +1,61 @@
+{
+  "personal": {
+    "name": "Tirumalarao Kilari",
+    "email": "kilaritirumalarao@gmail.com",
+    "phone": "346-474-6746",
+    "location": "Pflugerville, TX",
+    "linkedin": "linkedin.com/in/tirumalaraokilari-803829273",
+    "github": "github.com/bizygoodz-web",
+    "title": "AI Engineer · Prompt Engineer · RAG Systems Builder"
+  },
+  "summary": "AI Engineer with hands-on experience designing production-grade agentic systems, multi-stage LLM pipelines, and modular backend architectures. Shipped two live web applications. Experienced in Python, JavaScript, SQL across live non-mocked environments.",
+  "skills": {
+    "languages": ["Python", "JavaScript", "SQL", "Bash"],
+    "llm_ai": ["Anthropic Claude", "OpenAI GPT-4", "Google Gemini", "Groq LLaMA", "Prompt Engineering", "System Prompt Design", "RAG Architecture"],
+    "frameworks": ["LangChain", "LangGraph", "FastAPI", "Streamlit", "Uvicorn", "Pydantic", "pytest"],
+    "vector_retrieval": ["FAISS", "Sentence-Transformers", "Cosine Similarity", "Chunking Strategies", "Embedding Pipelines"],
+    "infrastructure": ["GitHub Actions CI/CD", "Render", "Railway", "REST APIs", "Git", "GitHub Copilot"],
+    "security": ["Prompt injection detection", "Authority escalation prevention", "Hallucination mitigation"]
+  },
+  "experience": [
+    {
+      "title": "AI Agent & Prompt Engineer (Contract)",
+      "company": "Blue Origin IT Staffing — Client: Austinite Market",
+      "dates": "2024 – Present",
+      "location": "Austin, TX",
+      "bullets": [
+        "Designed and deployed a multi-stage AI content pipeline",
+        "Engineered system prompts in Google Gemini for brand-consistent marketing assets",
+        "Delivered production-ready assets physically deployed at client storefront",
+        "Translated business requirements into precise AI agent instructions"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "ResumeAI",
+      "url": "resumeai-v2.onrender.com",
+      "stack": ["Python", "Streamlit", "Groq", "BeautifulSoup", "Render"],
+      "bullets": [
+        "Full-stack AI web app that reads job URLs and tailors resumes automatically",
+        "Multi-stage pipeline: URL scraping → skill gap analysis → resume rewriting → cover letter generation"
+      ]
+    },
+    {
+      "name": "RAG PDF Chat Agent",
+      "url": "github.com/bizygoodz-web/rag-pdf-chat",
+      "stack": ["Python", "FAISS", "Claude", "FastAPI", "pytest"],
+      "bullets": [
+        "Production-grade RAG agent with modular separation and RAGAS evaluation",
+        "FastAPI REST server with CI/CD and prompt injection defenses"
+      ]
+    }
+  ],
+  "education": [{"degree": "Computer Science", "school": "Lindsey Wilson College", "dates": "2022-2023"}],
+  "preferences": {
+    "available": "Immediately",
+    "work_auth": "Yes, authorized to work in the US",
+    "salary": "Open to discussion",
+    "remote": true
+  }
+}
