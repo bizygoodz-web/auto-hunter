@@ -4,3 +4,5 @@ httpx
 beautifulsoup4
 lxml
 reportlab
+pdfplumber
+python-docx
