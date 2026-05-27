@@ -1,0 +1,80 @@
+"""
+Job Agent — scores jobs from scraper and prepares applications
+"""
+import json, re, os
+from groq import Groq
+
+client = Groq(api_key=os.environ.get("GROQ_API_KEY", ""))
+
+with open("career_vault.json") as f:
+    VAULT = json.load(f)
+
+SYSTEM = f"""You are a career strategist. Score jobs against this candidate profile.
+
+CAREER VAULT:
+{json.dumps(VAULT, indent=2)}
+
+SCORING (total 100):
+- 40% Technical skills match
+- 30% Seniority/experience match
+- 30% Industry alignment
+
+If score < 80 output ONLY: {{"decision":"SKIP","match_score":<n>,"skip_reason":"..."}}
+
+If score >= 80 output full JSON:
+{{
+  "decision":"APPLY",
+  "match_score":<n>,
+  "score_breakdown":{{"technical_skills":<n>,"seniority_experience":<n>,"industry_alignment":<n>}},
+  "matched_keywords":["kw1"],
+  "missing_keywords":["kw1"],
+  "tailored_bullets":["bullet 1","bullet 2","bullet 3"],
+  "cover_letter":"150 word cover letter",
+  "screening_answers":{{"Tell me about yourself":"...","Why this role":"...","Greatest strength":"..."}},
+  "sheet_log":"One line summary e.g. Applied: 88% Match at Company X"
+}}
+
+Respond ONLY with valid JSON. No markdown."""
+
+def evaluate_job(job: dict) -> dict:
+    text = f"Title: {job['title']}\nCompany: {job['company']}\nLocation: {job['location']}\n\nDescription:\n{job['description'][:2000]}"
+    try:
+        resp = client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[
+                {"role": "system", "content": SYSTEM},
+                {"role": "user", "content": f"Evaluate this job:\n\n{text}"}
+            ],
+            max_tokens=1500
+        )
+        raw = resp.choices[0].message.content.strip()
+        raw = re.sub(r"^```json\s*", "", raw)
+        raw = re.sub(r"\s*```$", "", raw)
+        result = json.loads(raw)
+        result["job"] = job
+        return result
+    except Exception as e:
+        return {"decision": "ERROR", "match_score": 0, "skip_reason": str(e), "job": job}
+
+def run_agent(jobs: list) -> list:
+    print(f"\n🤖 Evaluating {len(jobs)} jobs...")
+    results = []
+    for i, job in enumerate(jobs):
+        print(f"  [{i+1}/{len(jobs)}] {job['title']} at {job['company']}...", end=" ")
+        result = evaluate_job(job)
+        score = result.get("match_score", 0)
+        decision = result.get("decision", "SKIP")
+        print(f"{decision} ({score}%)")
+        results.append(result)
+    apply = [r for r in results if r.get("decision") == "APPLY"]
+    skip  = [r for r in results if r.get("decision") == "SKIP"]
+    print(f"\n✓ Results: {len(apply)} to apply, {len(skip)} skipped")
+    return results
+
+if __name__ == "__main__":
+    with open("jobs_found.json") as f:
+        jobs = json.load(f)
+    results = run_agent(jobs)
+    with open("agent_results.json", "w") as f:
+        json.dump(results, f, indent=2)
+    print("Saved to agent_results.json")
