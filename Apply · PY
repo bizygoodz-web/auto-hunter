@@ -1,0 +1,147 @@
+"""
+Auto Apply — Playwright fills and submits job applications
+Run LOCALLY only — needs a real browser installed
+"""
+import asyncio, json, os, re
+from playwright.async_api import async_playwright
+
+YOUR_NAME     = "Tirumalarao Kilari"
+YOUR_EMAIL    = "kilaritirumalarao@gmail.com"
+YOUR_PHONE    = "346-474-6746"
+YOUR_LOCATION = "Pflugerville, TX"
+YOUR_LINKEDIN = "linkedin.com/in/tirumalaraokilari-803829273"
+YOUR_GITHUB   = "github.com/bizygoodz-web"
+RESUME_PATH   = "resume.pdf"
+
+def detect_form(url: str) -> str:
+    url = url.lower()
+    if "greenhouse" in url: return "greenhouse"
+    if "lever.co"   in url: return "lever"
+    if "workday"    in url: return "workday"
+    return "generic"
+
+async def fill_form(page, form_type: str, info: dict):
+    await page.wait_for_selector("input", timeout=12000)
+
+    if form_type == "greenhouse":
+        fields = {
+            'input[id*="first"]':    info["first_name"],
+            'input[id*="last"]':     info["last_name"],
+            'input[type="email"]':   info["email"],
+            'input[type="tel"]':     info["phone"],
+        }
+    elif form_type == "lever":
+        fields = {
+            'input[name="name"]':              info["full_name"],
+            'input[name="email"]':             info["email"],
+            'input[name="phone"]':             info["phone"],
+            'input[name="location"]':          info["location"],
+            'input[name="urls[LinkedIn]"]':    info["linkedin"],
+            'input[name="urls[GitHub]"]':      info["github"],
+        }
+    else:
+        fields = {
+            'input[name*="first" i]':  info["first_name"],
+            'input[name*="last" i]':   info["last_name"],
+            'input[type="email"]':     info["email"],
+            'input[type="tel"]':       info["phone"],
+        }
+
+    for selector, value in fields.items():
+        try:
+            await page.fill(selector, value, timeout=2000)
+        except:
+            pass
+
+    # Upload resume
+    try:
+        fi = page.locator('input[type="file"]').first
+        await fi.set_input_files(info["resume_path"])
+        print("    ✓ Resume uploaded")
+    except Exception as e:
+        print(f"    ⚠ Resume upload failed: {e}")
+
+    # Cover letter
+    try:
+        ta = page.locator('textarea').first
+        await ta.fill(info["cover_letter"], timeout=2000)
+    except:
+        pass
+
+async def auto_apply_job(job_result: dict, auto_submit: bool = False):
+    job  = job_result.get("job", {})
+    url  = job.get("url", "")
+    if not url:
+        print("  No URL — skipping")
+        return False
+
+    cover = job_result.get("cover_letter", "")
+    info  = {
+        "first_name":  YOUR_NAME.split()[0],
+        "last_name":   " ".join(YOUR_NAME.split()[1:]),
+        "full_name":   YOUR_NAME,
+        "email":       YOUR_EMAIL,
+        "phone":       YOUR_PHONE,
+        "location":    YOUR_LOCATION,
+        "linkedin":    YOUR_LINKEDIN,
+        "github":      YOUR_GITHUB,
+        "resume_path": RESUME_PATH,
+        "cover_letter": cover,
+    }
+
+    form_type = detect_form(url)
+    print(f"  Opening {url} ({form_type} form)...")
+
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=False)
+        page = await browser.new_page()
+        await page.goto(url, timeout=30000)
+        await page.wait_for_timeout(2000)
+        await fill_form(page, form_type, info)
+        print(f"  ✓ Form filled")
+
+        if auto_submit:
+            for sel in ['button[type="submit"]','input[type="submit"]','button:has-text("Submit")','button:has-text("Apply")']:
+                try:
+                    await page.click(sel, timeout=3000)
+                    print("  ✓ Submitted!")
+                    await page.wait_for_timeout(3000)
+                    break
+                except:
+                    pass
+        else:
+            print("  ⏸ Paused — review the form then press ENTER to submit or Ctrl+C to skip")
+            input()
+            for sel in ['button[type="submit"]','button:has-text("Submit")','button:has-text("Apply")']:
+                try:
+                    await page.click(sel, timeout=3000)
+                    print("  ✓ Submitted!")
+                    break
+                except:
+                    pass
+
+        await page.wait_for_timeout(2000)
+        await browser.close()
+    return True
+
+async def run_apply(results_file: str = "agent_results.json", auto_submit: bool = False):
+    with open(results_file) as f:
+        results = json.load(f)
+
+    apply_list = [r for r in results if r.get("decision") == "APPLY"]
+    print(f"\n🚀 Auto-applying to {len(apply_list)} jobs...")
+
+    applied = []
+    for r in apply_list:
+        job = r.get("job", {})
+        print(f"\n→ {job.get('title')} at {job.get('company')} ({r.get('match_score')}%)")
+        success = await auto_apply_job(r, auto_submit=auto_submit)
+        if success:
+            r["applied"] = True
+            applied.append(r)
+
+    print(f"\n✅ Applied to {len(applied)} jobs")
+    return applied
+
+if __name__ == "__main__":
+    asyncio.run(run_apply(auto_submit=False))
