@@ -1,0 +1,200 @@
+"""
+Job Scraper
+===========
+Pulls live job listings from multiple sources without login.
+Works on: RemoteOK, Greenhouse, Lever, We Work Remotely, Otta
+"""
+
+import httpx
+from bs4 import BeautifulSoup
+import json
+import re
+import time
+from datetime import datetime
+
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36",
+    "Accept-Language": "en-US,en;q=0.9",
+}
+
+# ── JOB SEARCH KEYWORDS ────────────────────────────────────────────────────
+SEARCH_KEYWORDS = [
+    "AI engineer",
+    "prompt engineer",
+    "LLM engineer",
+    "machine learning engineer",
+    "AI agent developer",
+    "RAG engineer",
+]
+
+BLACKLIST_COMPANIES = []  # Add companies to skip e.g. ["Company X"]
+BLACKLIST_KEYWORDS  = ["senior staff", "principal", "director", "10+ years", "PhD required"]
+
+
+def scrape_remoteok() -> list:
+    """Scrapes RemoteOK — no login needed, returns JSON."""
+    print("  Scraping RemoteOK...")
+    try:
+        r = httpx.get("https://remoteok.com/api?tag=ai", headers=HEADERS, timeout=15)
+        data = r.json()
+        jobs = []
+        for job in data[1:]:  # First item is metadata
+            if not isinstance(job, dict):
+                continue
+            title = job.get("position", "")
+            if not any(kw.lower() in title.lower() for kw in ["ai", "ml", "llm", "machine learning", "prompt"]):
+                continue
+            jobs.append({
+                "title": title,
+                "company": job.get("company", ""),
+                "url": job.get("url", ""),
+                "location": job.get("location", "Remote"),
+                "description": job.get("description", "")[:2000],
+                "source": "RemoteOK",
+                "found_at": datetime.now().isoformat()
+            })
+        print(f"    Found {len(jobs)} jobs on RemoteOK")
+        return jobs
+    except Exception as e:
+        print(f"    RemoteOK error: {e}")
+        return []
+
+
+def scrape_wwr() -> list:
+    """Scrapes We Work Remotely — no login needed."""
+    print("  Scraping We Work Remotely...")
+    jobs = []
+    try:
+        r = httpx.get("https://weworkremotely.com/categories/remote-programming-jobs.rss", headers=HEADERS, timeout=15)
+        soup = BeautifulSoup(r.text, "xml")
+        for item in soup.find_all("item")[:20]:
+            title = item.find("title").text if item.find("title") else ""
+            if not any(kw.lower() in title.lower() for kw in ["ai", "ml", "llm", "machine learning", "python"]):
+                continue
+            jobs.append({
+                "title": title,
+                "company": item.find("region").text if item.find("region") else "",
+                "url": item.find("link").text if item.find("link") else "",
+                "location": "Remote",
+                "description": BeautifulSoup(item.find("description").text, "html.parser").get_text()[:2000] if item.find("description") else "",
+                "source": "WeWorkRemotely",
+                "found_at": datetime.now().isoformat()
+            })
+        print(f"    Found {len(jobs)} jobs on We Work Remotely")
+    except Exception as e:
+        print(f"    WWR error: {e}")
+    return jobs
+
+
+def scrape_greenhouse(company_slug: str) -> list:
+    """Scrapes a specific company's Greenhouse job board."""
+    jobs = []
+    try:
+        url = f"https://boards.greenhouse.io/{company_slug}/jobs.json"
+        r = httpx.get(url, headers=HEADERS, timeout=10)
+        data = r.json()
+        for dept in data.get("departments", []):
+            for job in dept.get("jobs", []):
+                title = job.get("title", "")
+                if not any(kw.lower() in title.lower() for kw in ["ai", "ml", "llm", "machine learning", "python", "engineer", "prompt"]):
+                    continue
+                jobs.append({
+                    "title": title,
+                    "company": company_slug.replace("-", " ").title(),
+                    "url": job.get("absolute_url", ""),
+                    "location": job.get("location", {}).get("name", "Remote"),
+                    "description": "",
+                    "source": f"Greenhouse/{company_slug}",
+                    "found_at": datetime.now().isoformat()
+                })
+    except:
+        pass
+    return jobs
+
+
+def scrape_lever(company_slug: str) -> list:
+    """Scrapes a specific company's Lever job board."""
+    jobs = []
+    try:
+        url = f"https://api.lever.co/v0/postings/{company_slug}?mode=json"
+        r = httpx.get(url, headers=HEADERS, timeout=10)
+        data = r.json()
+        for job in data:
+            title = job.get("text", "")
+            if not any(kw.lower() in title.lower() for kw in ["ai", "ml", "llm", "machine learning", "python", "engineer", "prompt"]):
+                continue
+            desc = ""
+            for section in job.get("descriptionBody", {}).get("content", []):
+                if isinstance(section, dict):
+                    for block in section.get("content", []):
+                        if isinstance(block, dict) and block.get("text"):
+                            desc += block["text"] + " "
+            jobs.append({
+                "title": title,
+                "company": company_slug.replace("-", " ").title(),
+                "url": job.get("hostedUrl", ""),
+                "location": job.get("categories", {}).get("location", "Remote"),
+                "description": desc[:2000],
+                "source": f"Lever/{company_slug}",
+                "found_at": datetime.now().isoformat()
+            })
+    except:
+        pass
+    return jobs
+
+
+# Companies to watch on Greenhouse/Lever
+GREENHOUSE_COMPANIES = ["scale-ai", "huggingface", "cohere", "anyscale", "weights-biases"]
+LEVER_COMPANIES      = ["openai", "anthropic", "mistral", "together-ai"]
+
+
+def scrape_all() -> list:
+    """Run all scrapers and return deduplicated jobs."""
+    print("\n🔍 Scraping job boards...")
+    all_jobs = []
+
+    all_jobs.extend(scrape_remoteok())
+    time.sleep(1)
+    all_jobs.extend(scrape_wwr())
+    time.sleep(1)
+
+    for company in GREENHOUSE_COMPANIES:
+        jobs = scrape_greenhouse(company)
+        if jobs:
+            print(f"    Found {len(jobs)} jobs at {company} (Greenhouse)")
+        all_jobs.extend(jobs)
+        time.sleep(0.5)
+
+    for company in LEVER_COMPANIES:
+        jobs = scrape_lever(company)
+        if jobs:
+            print(f"    Found {len(jobs)} jobs at {company} (Lever)")
+        all_jobs.extend(jobs)
+        time.sleep(0.5)
+
+    # Deduplicate by URL
+    seen = set()
+    unique = []
+    for job in all_jobs:
+        if job["url"] and job["url"] not in seen:
+            seen.add(job["url"])
+            unique.append(job)
+
+    # Filter blacklisted
+    filtered = []
+    for job in unique:
+        if any(b.lower() in job["company"].lower() for b in BLACKLIST_COMPANIES):
+            continue
+        if any(b.lower() in job["title"].lower() for b in BLACKLIST_KEYWORDS):
+            continue
+        filtered.append(job)
+
+    print(f"\n✓ Total unique jobs found: {len(filtered)}")
+    return filtered
+
+
+if __name__ == "__main__":
+    jobs = scrape_all()
+    with open("jobs_found.json", "w") as f:
+        json.dump(jobs, f, indent=2)
+    print(f"Saved to jobs_found.json")
