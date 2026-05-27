@@ -1,0 +1,85 @@
+"""
+ResumeAI Auto Hunter — Full Pipeline
+=====================================
+Runs automatically: scrape → score → apply → track → email
+
+Usage:
+    python main.py             # Full auto run
+    python main.py --dry-run   # Score only, no applying
+    python main.py --apply     # Apply to already-scored jobs
+
+Setup:
+    pip install -r requirements.txt
+    playwright install chromium
+    set GROQ_API_KEY=your_key
+    set SMTP_EMAIL=your_gmail (optional for email reports)
+    set SMTP_APP_PASSWORD=your_app_password (optional)
+"""
+
+import asyncio, json, sys, os
+from scraper import scrape_all
+from agent   import run_agent
+from apply   import run_apply
+from tracker import run_tracker
+
+DRY_RUN     = "--dry-run" in sys.argv
+APPLY_ONLY  = "--apply"   in sys.argv
+AUTO_SUBMIT = "--auto-submit" in sys.argv  # ⚠ submits without human review
+
+async def main():
+    print("=" * 55)
+    print("  🎯 ResumeAI Auto Hunter — Full Pipeline")
+    print("=" * 55)
+
+    if APPLY_ONLY:
+        print("\n📂 Loading existing scored jobs...")
+        with open("agent_results.json") as f:
+            results = json.load(f)
+    else:
+        # Step 1: Scrape
+        jobs = scrape_all()
+        if not jobs:
+            print("No jobs found. Try again later.")
+            return
+
+        # Step 2: Score
+        results = run_agent(jobs)
+        with open("agent_results.json", "w") as f:
+            json.dump(results, f, indent=2)
+
+    apply_list = [r for r in results if r.get("decision") == "APPLY"]
+    skip_list  = [r for r in results if r.get("decision") == "SKIP"]
+
+    print(f"\n📊 Summary:")
+    print(f"   Jobs scored:   {len(results)}")
+    print(f"   To apply:      {len(apply_list)}")
+    print(f"   Skipped:       {len(skip_list)}")
+
+    if apply_list:
+        print("\n✅ Jobs to apply to:")
+        for r in apply_list:
+            job = r.get("job", {})
+            print(f"   {r['match_score']}% — {job.get('title')} at {job.get('company')}")
+            print(f"            {job.get('url')}")
+
+    if DRY_RUN:
+        print("\n[Dry run mode — skipping apply step]")
+        run_tracker(results)
+        return
+
+    if apply_list:
+        if not AUTO_SUBMIT:
+            print(f"\n⚠ About to apply to {len(apply_list)} jobs.")
+            print("  Each job will open in a browser for you to review before submitting.")
+            confirm = input("  Proceed? (yes/no): ").strip().lower()
+            if confirm != "yes":
+                print("Cancelled.")
+                return
+
+        await run_apply("agent_results.json", auto_submit=AUTO_SUBMIT)
+
+    run_tracker(results)
+    print("\n🎉 Pipeline complete!")
+
+if __name__ == "__main__":
+    asyncio.run(main())
