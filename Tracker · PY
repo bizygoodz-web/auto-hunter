@@ -1,0 +1,126 @@
+"""
+Tracker — logs applications and sends daily email report
+"""
+import json, os, smtplib
+from datetime import datetime
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from pathlib import Path
+
+LOG_FILE       = "applications_log.json"
+YOUR_EMAIL     = "kilaritirumalarao@gmail.com"
+SMTP_EMAIL     = os.environ.get("SMTP_EMAIL", "")     # your gmail
+SMTP_PASSWORD  = os.environ.get("SMTP_APP_PASSWORD", "")  # gmail app password
+
+def load_log() -> list:
+    if Path(LOG_FILE).exists():
+        with open(LOG_FILE) as f:
+            return json.load(f)
+    return []
+
+def save_log(log: list):
+    with open(LOG_FILE, "w") as f:
+        json.dump(log, f, indent=2)
+
+def log_applications(results: list):
+    log = load_log()
+    today = datetime.now().strftime("%Y-%m-%d")
+    new_entries = 0
+    for r in results:
+        if r.get("decision") != "APPLY":
+            continue
+        job = r.get("job", {})
+        entry = {
+            "date":        today,
+            "timestamp":   datetime.now().isoformat(),
+            "title":       job.get("title", ""),
+            "company":     job.get("company", ""),
+            "url":         job.get("url", ""),
+            "match_score": r.get("match_score", 0),
+            "decision":    r.get("decision", ""),
+            "sheet_log":   r.get("sheet_log", ""),
+            "status":      "applied",
+            "source":      job.get("source", ""),
+        }
+        # Avoid duplicate entries
+        existing_urls = [e.get("url") for e in log]
+        if entry["url"] not in existing_urls:
+            log.append(entry)
+            new_entries += 1
+
+    save_log(log)
+    print(f"✓ Logged {new_entries} new applications (total: {len(log)})")
+    return log
+
+def generate_daily_report(log: list) -> str:
+    today = datetime.now().strftime("%Y-%m-%d")
+    today_apps = [e for e in log if e.get("date") == today]
+    all_apps   = log
+
+    lines = [
+        f"DAILY JOB HUNT REPORT — {today}",
+        "=" * 50,
+        f"Applied today:  {len(today_apps)}",
+        f"Total applied:  {len(all_apps)}",
+        "",
+        "TODAY'S APPLICATIONS:",
+    ]
+
+    for app in today_apps:
+        lines.append(f"  • {app['match_score']}% — {app['title']} at {app['company']}")
+        lines.append(f"    {app['url']}")
+        if app.get("sheet_log"):
+            lines.append(f"    Log: {app['sheet_log']}")
+        lines.append("")
+
+    if not today_apps:
+        lines.append("  No applications today.")
+
+    lines += [
+        "",
+        "ALL-TIME SUMMARY:",
+        f"  Total applications: {len(all_apps)}",
+    ]
+
+    if all_apps:
+        avg_score = sum(a.get("match_score", 0) for a in all_apps) / len(all_apps)
+        lines.append(f"  Average match score: {avg_score:.0f}%")
+        top = sorted(all_apps, key=lambda x: x.get("match_score", 0), reverse=True)[:3]
+        lines.append("\n  Top 3 matches:")
+        for t in top:
+            lines.append(f"    {t['match_score']}% — {t['title']} at {t['company']}")
+
+    return "\n".join(lines)
+
+def send_email_report(report: str):
+    if not SMTP_EMAIL or not SMTP_PASSWORD:
+        print("⚠ SMTP credentials not set — skipping email. Set SMTP_EMAIL and SMTP_APP_PASSWORD env vars.")
+        print("\n" + report)
+        return
+
+    msg = MIMEMultipart()
+    msg["From"]    = SMTP_EMAIL
+    msg["To"]      = YOUR_EMAIL
+    msg["Subject"] = f"Job Hunt Report — {datetime.now().strftime('%Y-%m-%d')}"
+    msg.attach(MIMEText(report, "plain"))
+
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(SMTP_EMAIL, SMTP_PASSWORD)
+            server.send_message(msg)
+        print("✓ Daily report emailed!")
+    except Exception as e:
+        print(f"⚠ Email failed: {e}")
+        print("\nReport:\n" + report)
+
+def run_tracker(results: list = None):
+    log = load_log()
+    if results:
+        log = log_applications(results)
+    report = generate_daily_report(log)
+    print("\n" + report)
+    send_email_report(report)
+    return report
+
+if __name__ == "__main__":
+    run_tracker()
