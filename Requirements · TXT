@@ -3,9 +3,3 @@ httpx
 beautifulsoup4
 playwright
 lxml
-streamlit
-groq
-httpx
-beautifulsoup4
-pdfplumber
-python-docx
